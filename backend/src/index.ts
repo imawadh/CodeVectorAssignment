@@ -46,6 +46,17 @@ function encodeCursor(cursor: Cursor): string {
   return Buffer.from(JSON.stringify(cursor)).toString("base64");
 }
 
+app.get("/", (_req: Request, res: Response) => {
+  res.json({
+    name: "CodeVector Products API",
+    status: "ok",
+    endpoints: {
+      health: "/health",
+      products: "/api/products?limit=20&cursor=<base64>&category=<name>",
+    },
+  });
+});
+
 app.get("/health", (_req: Request, res: Response) => {
   res.json({ status: "ok" });
 });
