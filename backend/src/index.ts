@@ -7,9 +7,26 @@ import { products } from "./db/schema";
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3001;
-const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || "http://localhost:3000";
+// Accept a comma-separated list of origins; ignore trailing slashes so a value
+// like "https://app.vercel.app/" still matches the browser's "https://app.vercel.app".
+const stripSlash = (s: string) => s.trim().replace(/\/+$/, "");
+const allowedOrigins = (process.env.FRONTEND_ORIGIN || "http://localhost:3000")
+  .split(",")
+  .map(stripSlash)
+  .filter(Boolean);
 
-app.use(cors({ origin: FRONTEND_ORIGIN }));
+app.use(
+  cors({
+    origin(origin, callback) {
+      // Allow non-browser requests (no Origin header) and any allowed origin.
+      if (!origin || allowedOrigins.includes(stripSlash(origin))) {
+        callback(null, true);
+      } else {
+        callback(null, false);
+      }
+    },
+  })
+);
 app.use(express.json());
 
 const DEFAULT_LIMIT = 20;
@@ -129,5 +146,5 @@ app.get("/api/products", async (req: Request, res: Response) => {
 
 app.listen(PORT, () => {
   console.log(`API listening on http://localhost:${PORT}`);
-  console.log(`CORS allowed origin: ${FRONTEND_ORIGIN}`);
+  console.log(`CORS allowed origins: ${allowedOrigins.join(", ")}`);
 });
